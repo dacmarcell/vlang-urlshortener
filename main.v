@@ -29,9 +29,8 @@ pub struct Url {
 pub fn (app &App) shorten(mut ctx Context) veb.Result {
 	original_url := ctx.query['url'] or {
 		return ctx.json(ShortenResponse{
-			shortened_url: ''
-			error: 'Missing url parameter'
-		})
+        	error: 'Invalid URL format'
+    	})
 	}
 
 	short_id := time.now().unix().str()
@@ -43,15 +42,21 @@ pub fn (app &App) shorten(mut ctx Context) veb.Result {
 	})
 
 	mut redis := vredis.new_client(host: '127.0.0.1', port: 6379) or {
-	 	panic(err)
+	 	return ctx.json(ShortenResponse{
+        	error: 'Redis failed to connect: $err'
+    	})
 	}
 
 	redis.set(short_id, urls) or {
-	 	panic(err)
+	 	return ctx.json(ShortenResponse{
+			error: 'Failed to store URL in Redis: $err'
+		})
 	}
 
 	redis.close() or {
-		panic(err)
+		return ctx.json(ShortenResponse{
+			error: 'Failed to close Redis connection: $err'
+		})
 	}
 	
 	return ctx.json(ShortenResponse{
@@ -62,19 +67,27 @@ pub fn (app &App) shorten(mut ctx Context) veb.Result {
 @['/:short_id']
 pub fn (app &App) redirect_url(mut ctx Context, short_id string) veb.Result {
 	mut redis := vredis.new_client(host: '127.0.0.1', port: 6379) or {
-	 	panic(err)
+		return ctx.json(ShortenResponse{
+        	error: 'Redis failed to connect: $err'
+    	})
 	}
 
 	url := redis.get(short_id) or {
-	 	panic(err)
+	 	return ctx.json(ShortenResponse{
+			error: 'Failed to fetch URL in Redis: $err'
+		})
 	}
 
 	redis.close() or {
-		panic(err)
+		return ctx.json(ShortenResponse{
+			error: 'Failed to close Redis connection: $err'
+		})
 	}
 
 	parsed_url := json.decode(Url, url) or {
-		panic(err)
+		return ctx.json(ShortenResponse{
+			error: 'Failed to parse URL data: $err'
+		})
 	}
 
 	return ctx.redirect(parsed_url.original_url)
