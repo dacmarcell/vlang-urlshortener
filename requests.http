@@ -1,0 +1,3 @@
+GET http://localhost:8000/shorten?url=https://google.com
+###
+GET http://localhost:8000/1762218004
