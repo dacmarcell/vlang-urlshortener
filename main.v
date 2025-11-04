@@ -1,9 +1,9 @@
 module main
 
 import xiusin.vredis
-import veb
-import time
+import rand
 import json
+import veb
 
 pub struct Context {
 	veb.Context
@@ -28,6 +28,10 @@ pub struct Url {
 		shortened_url string
 }
 
+fn generate_short_id() string {
+	return rand.string_from_set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 6)
+}
+
 pub fn (mut app App) shorten(mut ctx Context) veb.Result {
 	original_url := ctx.query['url'] or {
 		return ctx.json(ShortenResponse{
@@ -35,7 +39,7 @@ pub fn (mut app App) shorten(mut ctx Context) veb.Result {
     	})
 	}
 
-	short_id := time.now().unix().str()
+	short_id := generate_short_id()
 	shortened_url := app.domain + short_id
 
 	urls := json.encode(Url{
