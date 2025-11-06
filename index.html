@@ -94,10 +94,15 @@
         font-weight: 600;
         cursor: pointer;
       }
+      button:hover {
+        background: #5b21b6;
+      }
       button.secondary {
         background: transparent;
         border: 1px solid rgba(255, 255, 255, 0.06);
-        color: var(--muted);
+      }
+      button.secondary:hover {
+        background: rgba(255, 255, 255, 0.02);
       }
       .result {
         margin-top: 16px;
@@ -162,6 +167,17 @@
         color: var(--muted);
         font-size: 13px;
       }
+      .success {
+        color: #22c55e;
+        margin-top: 14px;
+      }
+      .error {
+        color: #ef4444;
+        margin-top: 14px;
+      }
+      .hidden {
+        display: none;
+      }
       @media (max-width: 640px) {
         .form-row {
           flex-direction: column;
@@ -179,10 +195,7 @@
         <div class="logo">U</div>
         <div>
           <h1>Encurtador de URL</h1>
-          <p class="lead">
-            Cole uma URL abaixo para gerar uma versão curta. Conectado à API em
-            V (localhost:8000).
-          </p>
+          <p class="lead">Cole uma URL abaixo para gerar uma versão curta.</p>
         </div>
       </header>
       <main class="card" role="main">
@@ -195,9 +208,13 @@
             aria-label="URL a encurtar"
           />
           <button id="shorten" onclick="shortenUrl()">Encurtar</button>
-          <button id="clear" class="secondary" disabled>Limpar</button>
+          <button id="clear" class="secondary" onclick="clearInput()">
+            Limpar
+          </button>
         </div>
-        <div id="output" class="result" hidden>
+        <div class="success" id="success" hidden>Sucesso! Url gerada.</div>
+        <div class="error" id="error" hidden>Erro ao gerar Url</div>
+        <div id="output" class="result">
           <button id="copy" class="secondary" onclick="copyShortenLink()">
             Copiar
           </button>
@@ -219,9 +236,24 @@
       const value = input.value.trim();
 
       const response = await fetch(domain + "/shorten?url=" + value);
+      if (response.ok) {
+        const successDiv = document.getElementById("success");
+        successDiv.hidden = false;
+      } else {
+        const errorDiv = document.getElementById("error");
+        errorDiv.hidden = false;
+      }
+
       const data = await response.json();
 
       setShortenedUrl(data?.shortened_url);
+    }
+
+    function clearInput() {
+      const input = document.getElementById("url");
+
+      input.value = "";
+      setShortenedUrl("");
     }
 
     function copyShorteLink() {
