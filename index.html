@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Encurtador de URL</title>
+    <style>
+      :root {
+        --bg: #0f1724;
+        --card: #0b1220;
+        --accent: #7c3aed;
+        --muted: #94a3b8;
+        --glass: rgba(255, 255, 255, 0.04);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #071025 0%, #071828 60%);
+        color: #e6eef8;
+        font-family: Inter, Segoe UI, Helvetica, Arial, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px;
+      }
+      .container {
+        width: 100%;
+        max-width: 920px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+      .logo {
+        width: 56px;
+        height: 56px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--accent), #06b6d4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: white;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0;
+      }
+      p.lead {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .card {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(255, 255, 255, 0.01)
+        );
+        border-radius: 14px;
+        padding: 20px;
+        box-shadow: 0 6px 20px rgba(2, 6, 23, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+      }
+
+      .form-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 14px;
+      }
+      input[type="text"] {
+        flex: 1;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: var(--glass);
+        color: inherit;
+        font-size: 15px;
+      }
+      button {
+        background: var(--accent);
+        border: none;
+        color: white;
+        padding: 12px 16px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        color: var(--muted);
+      }
+      .result {
+        margin-top: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .chip {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 10px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.02);
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .chip a {
+        color: #bfe3ff;
+        text-decoration: none;
+      }
+      .meta {
+        display: flex;
+        gap: 12px;
+        margin-top: 14px;
+        align-items: center;
+      }
+      .meta small {
+        color: var(--muted);
+      }
+      .history {
+        margin-top: 16px;
+        display: grid;
+        gap: 8px;
+      }
+      .history-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.02);
+        align-items: center;
+      }
+      .history-left {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .qr {
+        width: 88px;
+        height: 88px;
+        border-radius: 8px;
+        background: white;
+        padding: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .notice {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      @media (max-width: 640px) {
+        .form-row {
+          flex-direction: column;
+        }
+        .qr {
+          width: 64px;
+          height: 64px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="logo">U</div>
+        <div>
+          <h1>Encurtador de URL</h1>
+          <p class="lead">
+            Cole uma URL abaixo para gerar uma versão curta. Conectado à API em
+            V (localhost:8000).
+          </p>
+        </div>
+      </header>
+      <main class="card" role="main">
+        <label for="url">URL original</label>
+        <div class="form-row">
+          <input
+            id="url"
+            type="text"
+            placeholder="https://exemplo.com/minha-pagina"
+            aria-label="URL a encurtar"
+          />
+          <button id="shorten" onclick="shortenUrl()">Encurtar</button>
+          <button id="clear" class="secondary" disabled>Limpar</button>
+        </div>
+        <div id="output" class="result" hidden>
+          <button id="copy" class="secondary" onclick="copyShortenLink()">
+            Copiar
+          </button>
+          <button id="open" class="secondary" onclick="openShortenLink()">
+            Abrir
+          </button>
+          <div id="qrContainer"></div>
+        </div>
+        <section class="history" id="history"></section>
+      </main>
+    </div>
+  </body>
+  <script>
+    const domain = "http://localhost:8000";
+    const [shortenedUrl, setShortenedUrl] = state("");
+
+    async function shortenUrl() {
+      const input = document.getElementById("url");
+      const value = input.value.trim();
+
+      const response = await fetch(domain + "/shorten?url=" + value);
+      const data = await response.json();
+
+      setShortenedUrl(data?.shortened_url);
+    }
+
+    function copyShorteLink() {
+      navigator.clipboard.writeText(shortenedUrl());
+    }
+
+    function openShortenLink() {
+      window.open(shortenedUrl());
+    }
+
+    function state(initialValue) {
+      let value = initialValue;
+
+      const get = () => value;
+      const set = (newValue) => {
+        value = newValue;
+      };
+
+      return [get, set];
+    }
+  </script>
+</html>
