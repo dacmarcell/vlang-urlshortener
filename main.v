@@ -76,7 +76,8 @@ pub fn (mut app App) redirect_url(mut ctx Context, short_id string) veb.Result {
 }
 
 pub fn (app &App) index(mut ctx Context) veb.Result {
-	return ctx.text('Hello from veb $app.domain')
+	//return ctx.html('<h1>Hello from veb $app.domain</h1>')
+	return $veb.html()
 }
 
 fn main() {
